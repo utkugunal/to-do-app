@@ -1,5 +1,10 @@
-import create from "zustand";
+import { create } from "zustand";
 import { persist } from "zustand/middleware";
+
+let storage;
+if (typeof window !== "undefined") {
+  storage = localStorage; // Use localStorage if in browser environment
+}
 
 const useHashtagStore = create(
   persist(
@@ -17,7 +22,7 @@ const useHashtagStore = create(
     }),
     {
       name: "hashtags", // unique name for localStorage
-      getStorage: () => localStorage, // specify localStorage as the storage
+      storage,
     }
   )
 );

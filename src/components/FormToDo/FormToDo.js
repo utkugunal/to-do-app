@@ -1,6 +1,5 @@
 import UpperButton from "@/components/UpperButton/UpperButton";
 import useHashtagStore from "@/pages/store";
-import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { useState } from "react";
 import DatePicker from "react-datepicker";
@@ -36,6 +35,7 @@ export default function FormToDo() {
     event.target.reset();
     setDate(null);
     clearHashtags();
+    setShowHashtagInput(false);
 
     console.log("todos:", todos);
   }
@@ -44,28 +44,45 @@ export default function FormToDo() {
     router.push("/");
   }
 
-  function handleHashtagClick(hashtag) {
-    // ... existing logic
+  function toggleHashtagInput() {
+    if (!showHashtagInput) {
+      setShowHashtagInput(true);
+    }
   }
 
-  function handleHashtagSubmit(event) {
-    event.preventDefault();
-    const formData = new FormData(event.target);
-    const data = Object.fromEntries(formData);
-    let newHashtag = data.hashtag.trim();
+  function handleRemove() {
+    if (selectedHashtag) {
+      removeHashtag(selectedHashtag);
+      setSelectedHashtag(null);
+    }
+  }
+
+  function handleHashtagSubmit(e) {
+    e.preventDefault();
+    const formDataHashtag = new FormData(e.target);
+    const dataHastag = Object.fromEntries(formDataHashtag);
+
+    let newHashtag = dataHastag.hashtag.trim();
     if (!newHashtag.startsWith("#")) {
       newHashtag = "#" + newHashtag;
     }
+
     addHashtag(newHashtag);
-    event.target.reset();
+    e.target.reset();
+
+    console.log("hashtags:", useHashtagStore.getState().hashtags);
   }
 
-  function handleRemoveHashtag() {
-    // ... existing logic
+  function handleHashtagClick(hashtag) {
+    if (selectedHashtag === hashtag) {
+      setSelectedHashtag(null);
+    } else {
+      setSelectedHashtag(hashtag);
+    }
   }
 
   return (
-    <div>
+    <div className="flex flex-col">
       <style>
         {`
           input:checked ~ .dot {
@@ -73,8 +90,8 @@ export default function FormToDo() {
           }
         `}
       </style>
-      <form onSubmit={handleSubmit}>
-        <div className="flex flex-col">
+      <form onSubmit={handleSubmit} className="flex flex-col">
+        <div className="flex flex-col ">
           <div className="flex flex-row h-24 justify-center mt-8">
             <UpperButton type="button" onClick={handleCancel}>
               Cancel
@@ -118,25 +135,60 @@ export default function FormToDo() {
               placeholderText="Date"
             />
 
-            <Link
-              href="/new/tags"
+            <div
               className="border border-gray-300 p-1 m-2 mr-16 ml-16 rounded-md w-72 text-gray-400 font-small"
+              onClick={toggleHashtagInput}
             >
               Tags
               <div className="flex flex-row flex-wrap overflow-y-auto m-1 h-8">
                 {hashtags.map((item, index) => (
                   <span
                     key={index}
-                    className="bg-blue-500 text-white text-sm p-1 m-1 rounded-md h-7"
+                    onClick={() => handleHashtagClick(item)}
+                    className={`bg-blue-500 text-white text-sm p-1 m-1 rounded-md h-7 ${
+                      selectedHashtag === item ? "bg-blue-700" : ""
+                    }`}
                   >
                     {item}
                   </span>
                 ))}
               </div>
-            </Link>
+            </div>
           </div>
         </div>
       </form>
+
+      {showHashtagInput && (
+        <form
+          onSubmit={handleHashtagSubmit}
+          className="flex flex-col items-center mt-48"
+        >
+          <input
+            id="hashtag"
+            name="hashtag"
+            type="text"
+            placeholder="Add #hashtag"
+            required
+            className="border border-gray-300 p-1 m-2 mr-16 ml-16 rounded-md w-72 h-8"
+          ></input>
+
+          <div className="flex flex-row justify-center w-72">
+            <button
+              type="submit"
+              className="border  border-blue-500 text-blue-500  pl-6 pr-6 m-1 mr-8 ml-6 rounded-md w-18 h-8 flex justify-center items-center"
+            >
+              Add#
+            </button>
+            <button
+              type="button"
+              onClick={handleRemove}
+              className="border border-red-500 text-red-500 pl-6 pr-6 m-1 mr-6 ml-6 rounded-md w-18 h-8 flex justify-center items-center"
+            >
+              Remove#
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }
